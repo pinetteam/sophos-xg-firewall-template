@@ -1,0 +1,2544 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: f768ca76253c4b3a837ce0eac53b8b49
+      name: Templates/Network devices
+  templates:
+    - uuid: 347acd2c827a463dbc20261ccde5abcd
+      template: 'Sophos XG Firewall SNMP'
+      name: 'Sophos XG Firewall SNMP'
+      description: |
+        Sophos XG Firewall SNMP Monitoring Template
+        
+        This template is designed for monitoring Sophos XG Firewall devices via SNMP protocol.
+        All important metrics and services are monitored using SFOS-FIREWALL-MIB.
+        
+        Features:
+        - Device information and inventory
+        - System performance metrics (CPU, RAM, Disk)
+        - All service status monitoring
+        - HA (High Availability) status
+        - License status and expiration dates
+        - Network interfaces auto-discovery
+        - IPSec VPN tunnels auto-discovery
+        - WiFi Access Points auto-discovery
+        - WiFi Clients auto-discovery
+        - SNMP trap support
+        
+        Requirements:
+        - Zabbix 7.2.0 or higher
+        - SNMP enabled on Sophos XG Firewall
+        - SFOS-FIREWALL-MIB installed
+        
+        Author: Ali Erdem Sunar
+        Company: Pinet Bilişim A.Ş.
+        Email: info@pinet.com.tr
+        Phone: +90 (312) 911 9113
+        
+        Template version: 1.0
+        Date: 2025
+      vendor:
+        name: Sophos
+        version: '7.2-1.0'
+      groups:
+        - name: Templates/Network devices
+      items:
+        # Device Information
+        - uuid: 30a345a3404d4bcca3f985737bb0930e
+          name: 'Device name'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.1.1.0
+          key: sophos.device.name
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Hostname of the SFOS XG Device'
+          tags:
+            - tag: component
+              value: system
+            - tag: resource
+              value: device
+
+        - uuid: 565c86b9b9b44b3592dd27b7d481613f
+          name: 'Device type'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.1.2.0
+          key: sophos.device.type
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Type of Device like XG-85, XG-210'
+          inventory_link: MODEL
+          tags:
+            - tag: component
+              value: system
+            - tag: resource
+              value: device
+
+        - uuid: f8cd97f389fb4903ae732b3e99fff735
+          name: 'Firmware version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.1.3.0
+          key: sophos.firmware.version
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Current running firmware version of SFOS'
+          inventory_link: OS
+          tags:
+            - tag: component
+              value: system
+            - tag: resource
+              value: firmware
+          triggers:
+            - uuid: 5946cce74ef241f4872cbadeed6a8d1c
+              expression: 'change(/Sophos XG Firewall SNMP/sophos.firmware.version)<>0'
+              name: 'Firmware version has changed'
+              priority: INFO
+              description: 'Firmware version has changed. Acknowledge to close.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+
+        - uuid: 3ee1d4dcd2224735a9634fa89f4a6d7b
+          name: 'Device serial number'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.1.4.0
+          key: sophos.device.serial
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Appliance Key of SFOS Device'
+          inventory_link: SERIALNO_A
+          tags:
+            - tag: component
+              value: system
+            - tag: resource
+              value: device
+
+        - uuid: cb53745a35d9451cac25a429f797669f
+          name: 'Webcat version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.1.5.0
+          key: sophos.webcat.version
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Current webcat version running in SFOS'
+          tags:
+            - tag: component
+              value: security
+            - tag: resource
+              value: webcat
+
+        - uuid: ef6f449e21b34091a4511159284037e3
+          name: 'IPS version'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.1.6.0
+          key: sophos.ips.version
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Current IPS version running in SFOS'
+          tags:
+            - tag: component
+              value: security
+            - tag: resource
+              value: ips
+
+        # System Statistics
+        - uuid: 4edc4b8771fd4085b7433a18975730d3
+          name: 'System uptime'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.2.0
+          key: sophos.system.uptime
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: uptime
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: system
+            - tag: resource
+              value: uptime
+          triggers:
+            - uuid: ee0da86acd6842cdb0e5d587bd8e984e
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.system.uptime)<10m'
+              name: 'Device has been restarted'
+              priority: WARNING
+              description: 'Device uptime is less than 10 minutes'
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 2d6ffce1d04d4b17a05353091420ad64
+          name: 'Live users count'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.6.0
+          key: sophos.users.live
+          delay: 5m
+          history: 7d
+          trends: 30d
+          description: 'Display live user count login into captive portal'
+          tags:
+            - tag: component
+              value: users
+            - tag: resource
+              value: count
+
+        # Disk and Memory
+        - uuid: b8482707999b4abdb9004edd7a1c5859
+          name: 'Disk capacity'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.4.1.0
+          key: sophos.disk.capacity
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1048576'
+          tags:
+            - tag: component
+              value: storage
+            - tag: resource
+              value: disk
+
+        - uuid: badb1dda89844cf0aa1e32e3baf312a8
+          name: 'Disk usage percentage'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.4.2.0
+          key: sophos.disk.usage.percentage
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: '%'
+          tags:
+            - tag: component
+              value: storage
+            - tag: resource
+              value: disk
+          triggers:
+            - uuid: fa0efa0aee0545509b6df59d91b17a3d
+              expression: 'avg(/Sophos XG Firewall SNMP/sophos.disk.usage.percentage,5m)>85'
+              name: 'High disk usage'
+              priority: HIGH
+              description: 'Disk usage is above 85%'
+              tags:
+                - tag: scope
+                  value: capacity
+            - uuid: 5decf1b917cc4203931ec25f80d782c2
+              expression: 'avg(/Sophos XG Firewall SNMP/sophos.disk.usage.percentage,5m)>95'
+              name: 'Critical disk usage'
+              priority: DISASTER
+              description: 'Disk usage is above 95%'
+              tags:
+                - tag: scope
+                  value: capacity
+
+        - uuid: 117e949661fb40bab7eca28254b7c2a4
+          name: 'Memory capacity'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.5.1.0
+          key: sophos.memory.capacity
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1048576'
+          tags:
+            - tag: component
+              value: memory
+            - tag: resource
+              value: ram
+
+        - uuid: 38b278efe7934aff9cd2cbaafb956927
+          name: 'Memory usage percentage'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.5.2.0
+          key: sophos.memory.usage.percentage
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: '%'
+          tags:
+            - tag: component
+              value: memory
+            - tag: resource
+              value: ram
+          triggers:
+            - uuid: 67901f4cf86b47659801b21d3495521e
+              expression: 'avg(/Sophos XG Firewall SNMP/sophos.memory.usage.percentage,5m)>85'
+              name: 'High memory usage'
+              priority: HIGH
+              description: 'Memory usage is above 85%'
+              tags:
+                - tag: scope
+                  value: capacity
+            - uuid: 76f2f4ce83fd48c5a0d3914f86385da7
+              expression: 'avg(/Sophos XG Firewall SNMP/sophos.memory.usage.percentage,5m)>95'
+              name: 'Critical memory usage'
+              priority: DISASTER
+              description: 'Memory usage is above 95%'
+              tags:
+                - tag: scope
+                  value: capacity
+
+        - uuid: 22050e1cb42741cf842e7ad5fcff91bb
+          name: 'Swap capacity'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.5.3.0
+          key: sophos.swap.capacity
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1048576'
+          tags:
+            - tag: component
+              value: memory
+            - tag: resource
+              value: swap
+
+        - uuid: 22c00aceeaa34873ad1478c0f342408d
+          name: 'Swap usage percentage'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.5.4.0
+          key: sophos.swap.usage.percentage
+          delay: 5m
+          history: 7d
+          trends: 30d
+          units: '%'
+          tags:
+            - tag: component
+              value: memory
+            - tag: resource
+              value: swap
+          triggers:
+            - uuid: 8c3c12c509c240719146b9cba35a300d
+              expression: 'avg(/Sophos XG Firewall SNMP/sophos.swap.usage.percentage,5m)>50'
+              name: 'High swap usage'
+              priority: WARNING
+              description: 'Swap usage is above 50%'
+              tags:
+                - tag: scope
+                  value: capacity
+            - uuid: 22fc6a331fea478c8c09294d7907adbc
+              expression: 'avg(/Sophos XG Firewall SNMP/sophos.swap.usage.percentage,5m)>80'
+              name: 'Critical swap usage'
+              priority: HIGH
+              description: 'Swap usage is above 80%'
+              tags:
+                - tag: scope
+                  value: capacity
+
+        - uuid: 048139838b96473c8bd1b0ec86bc09d2
+          name: 'Current system date'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.1.0
+          key: sophos.system.date
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Current system date and time'
+          tags:
+            - tag: component
+              value: system
+            - tag: resource
+              value: time
+
+        # Service Status Items - All Services
+        - uuid: 75310819327a4f9096625e69c844728a
+          name: 'POP3 service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.1.0
+          key: sophos.service.pop3
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'POP3 service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: pop3
+          triggers:
+            - uuid: 8290cf6b6a5f47818ab66fd855ada094
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.pop3)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.pop3)<>0'
+              name: 'POP3 service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: bae191193a064510a68f1be710078ea2
+          name: 'IMAP4 service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.2.0
+          key: sophos.service.imap4
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'IMAP4 service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: imap4
+          triggers:
+            - uuid: fac9926495b2442299c3d322a495325d
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.imap4)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.imap4)<>0'
+              name: 'IMAP4 service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: e25967ca5f2b497c9b1d0552a57b392b
+          name: 'SMTP service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.3.0
+          key: sophos.service.smtp
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'SMTP service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: smtp
+          triggers:
+            - uuid: 9c688161696d4318be749c573a6725c8
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.smtp)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.smtp)<>0'
+              name: 'SMTP service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 00d3660124284b678836f1caab318846
+          name: 'FTP service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.4.0
+          key: sophos.service.ftp
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'FTP service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: ftp
+          triggers:
+            - uuid: addce209e3f14c21aba665bf38f84499
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.ftp)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.ftp)<>0'
+              name: 'FTP service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: d03e1b7811e648c28360e0be9a81db0e
+          name: 'HTTP service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.5.0
+          key: sophos.service.http
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'HTTP service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: http
+          triggers:
+            - uuid: d023a304cf744a958e959aabc70298b6
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.http)<>3'
+              name: 'HTTP service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 446f6c20a6be4d5f8a5884f9425b29d1
+          name: 'AV service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.6.0
+          key: sophos.service.av
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Antivirus service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: antivirus
+          triggers:
+            - uuid: 36ba31af7bc3491287e4c774beb7af9a
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.av)<>3'
+              name: 'Antivirus service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: security
+
+        - uuid: 40cd7b70653b45ee863968500a3f3520
+          name: 'AS service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.7.0
+          key: sophos.service.as
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Anti-spam service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: antispam
+          triggers:
+            - uuid: 36f8f5169e8042868394ed8fda8f9921
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.as)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.as)<>7'
+              name: 'Anti-spam service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: security
+
+        - uuid: 5040b166d722456ebecdc155d7ba649c
+          name: 'DNS service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.8.0
+          key: sophos.service.dns
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'DNS service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: dns
+          triggers:
+            - uuid: 4f4b701d91694df3ad55f85b57fb2f35
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.dns)<>3'
+              name: 'DNS service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 7f9844033cb14a4285e2fb3f1bfb32c4
+          name: 'HA service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.9.0
+          key: sophos.service.ha
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'High Availability service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: ha
+          triggers:
+            - uuid: 2bc35114c3e54e6a8cd7fe648e215dd5
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.ha)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.ha)<>0 and last(/Sophos XG Firewall SNMP/sophos.service.ha)<>7'
+              name: 'HA service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: fa0d532066db481ca22f69b3be607c70
+          name: 'IPS service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.10.0
+          key: sophos.service.ips
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Intrusion Prevention System service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: ips
+          triggers:
+            - uuid: 11e0c8dee8d84c0092016bc1b7e2de41
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.ips)<>3'
+              name: 'IPS service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: security
+
+        - uuid: 05e768c06bda49f9a1856fad5ac4e23e
+          name: 'Apache service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.11.0
+          key: sophos.service.apache
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Apache web server service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: apache
+          triggers:
+            - uuid: 6d0c727bd6a042ab899918e5a829f1aa
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.apache)<>3'
+              name: 'Apache service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: d25fef70fa154734bce07cfb8665ae97
+          name: 'NTP service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.12.0
+          key: sophos.service.ntp
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Network Time Protocol service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: ntp
+          triggers:
+            - uuid: 0778752c0a0241a796968df635c67938
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.ntp)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.ntp)<>7'
+              name: 'NTP service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: a2a789ea18934c75ab45589c3e6ef134
+          name: 'Tomcat service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.13.0
+          key: sophos.service.tomcat
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Tomcat application server service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: tomcat
+          triggers:
+            - uuid: 7967214fa5cd44f1b4f46147fba85859
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.tomcat)<>3'
+              name: 'Tomcat service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: b8bd08a6a47947b7a3d1f73f89f7f4ad
+          name: 'SSL VPN service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.14.0
+          key: sophos.service.sslvpn
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'SSL VPN service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: sslvpn
+          triggers:
+            - uuid: f10653a0e34646c3aa1e289445032553
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.sslvpn)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.sslvpn)<>7'
+              name: 'SSL VPN service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 1d471b327e314ba88c2ace52f7e95d79
+          name: 'IPSec VPN service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.15.0
+          key: sophos.service.ipsecvpn
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'IPSec VPN service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: ipsecvpn
+          triggers:
+            - uuid: 23f1eac8e4594e13acf8a20097baae58
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.ipsecvpn)<>3'
+              name: 'IPSec VPN service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 992e1f1383ec4d0b9c0855949b6e68c2
+          name: 'Database service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.16.0
+          key: sophos.service.database
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Database service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: database
+          triggers:
+            - uuid: 715a29cae38d4ed0876ec8b5f19a4c9b
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.database)<>3'
+              name: 'Database service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: a3c6ca75e1d549f8ab8adb88c3ea73cd
+          name: 'Network service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.17.0
+          key: sophos.service.network
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Network service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: network
+          triggers:
+            - uuid: 976ee1cfa85143998e47639a70334a66
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.network)<>3'
+              name: 'Network service is not running'
+              priority: HIGH
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 84cf843f8bcf4cb6b75d068bd664d95c
+          name: 'Garner service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.18.0
+          key: sophos.service.garner
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Garner service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: garner
+          triggers:
+            - uuid: 99bd2989d5274288ac08bb513337cb38
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.garner)<>3'
+              name: 'Garner service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: e5e71b7b93c847b29d551d80f636fdbe
+          name: 'Drouting service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.19.0
+          key: sophos.service.drouting
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Dynamic routing service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: drouting
+          triggers:
+            - uuid: 5d2968b1f5c14a48bc33db85a5321a72
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.drouting)<>3'
+              name: 'Drouting service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 04f21dc8f7884f17a7083efcb2537557
+          name: 'SSH service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.20.0
+          key: sophos.service.ssh
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'SSH daemon service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: ssh
+          triggers:
+            - uuid: ef6114952fc54e98811f9f18c708ed3d
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.ssh)<>3 and last(/Sophos XG Firewall SNMP/sophos.service.ssh)<>0'
+              name: 'SSH service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: d67131902243490eafa1570671acb082
+          name: 'DGD service status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.3.21.0
+          key: sophos.service.dgd
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'DGD service status'
+          valuemap:
+            name: 'Sophos Service Status'
+          tags:
+            - tag: component
+              value: service
+            - tag: service
+              value: dgd
+          triggers:
+            - uuid: 999b3a25c75f493a8fd5e50316145af7
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.service.dgd)<>3'
+              name: 'DGD service is not running'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: availability
+
+        # HA Status - Detailed HA Information
+        - uuid: 98f8a4e14ac3438a891a255043f5f160
+          name: 'HA status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.1.0
+          key: sophos.ha.status
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'High Availability status (enabled/disabled)'
+          valuemap:
+            name: 'Sophos HA Status Type'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: status
+
+        - uuid: 1966a75e6efb46699001896f92447db8
+          name: 'Device current appliance key'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.2.0
+          key: sophos.ha.current.appkey
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Appliance Key of current Device'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: device
+
+        - uuid: ed9b713cf6e64952b9cf3ffac58babe2
+          name: 'Device peer appliance key'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.3.0
+          key: sophos.ha.peer.appkey
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Appliance Key of peer Device'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: peer
+
+        - uuid: 9cffd8308c6642a2b36cd420aa53c874
+          name: 'Current HA state'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.4.0
+          key: sophos.ha.current.state
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Current device HA state'
+          valuemap:
+            name: 'Sophos HA State'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: state
+          triggers:
+            - uuid: 3c8c0167cb6f4c818d5b60314049581a
+              expression: 'change(/Sophos XG Firewall SNMP/sophos.ha.current.state)'
+              name: 'HA state changed'
+              priority: WARNING
+              description: 'HA state has changed'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: a898a4590b144f98b34d6ff7771eb93b
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.ha.current.state)=2'
+              name: 'HA in faulty state'
+              priority: HIGH
+              description: 'HA is in faulty state'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 09b47a2846b0462d904f3ed87560c732
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.ha.current.state)=4'
+              name: 'HA state is faulty'
+              priority: HIGH
+              description: 'High Availability state is faulty'
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: eabb94af0b0a4dd09621f259fc81b4d9
+          name: 'Peer HA state'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.5.0
+          key: sophos.ha.peer.state
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Peer device HA state'
+          valuemap:
+            name: 'Sophos HA State'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: peer
+
+        - uuid: b6123696814d4e2381c4ad448bde26be
+          name: 'HA configuration mode'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.6.0
+          key: sophos.ha.config.mode
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'HA configuration mode'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: config
+
+        - uuid: c0f26a41bec4425c833e71e8653769aa
+          name: 'HA load balancing'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.7.0
+          key: sophos.ha.loadbalancing
+          delay: 5m
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'HA load balancing status'
+          valuemap:
+            name: 'Sophos Load Balancing Type'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: loadbalance
+
+        - uuid: 9b016b509f8c4ce3b67677467ae5a57c
+          name: 'HA dedicated port'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.8.0
+          key: sophos.ha.port
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'SFOS dedicated port for HA'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: port
+
+        - uuid: 35ef5dfc455c43ea82d9732ce7e5f3e7
+          name: 'HA current IP'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.9.0
+          key: sophos.ha.current.ip
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'IPAddress of current Device for HA'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: ip
+
+        - uuid: 28b65f7ae47243b0aca0373604d4e2bf
+          name: 'HA peer IP'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.10.0
+          key: sophos.ha.peer.ip
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Peer device IP Address'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: peer
+
+        - uuid: 47f18f6216c94bc3bd17732d0f7685ae
+          name: 'HA auxiliary admin port'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.11.1.0
+          key: sophos.ha.aux.admin.port
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'SFOS Auxiliary Admin Port'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: aux
+
+        - uuid: 5dfae4f0c325431ba236ed4db9d0b071
+          name: 'HA auxiliary admin IP'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.11.2.0
+          key: sophos.ha.aux.admin.ip
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'SFOS Auxiliary Admin IP'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: aux
+
+        - uuid: 20c816e616e5464ab091a65fcda3c369
+          name: 'HA auxiliary admin IPv6'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.4.11.3.0
+          key: sophos.ha.aux.admin.ipv6
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'SFOS Auxiliary Admin IPv6'
+          tags:
+            - tag: component
+              value: ha
+            - tag: resource
+              value: aux
+
+        # License Information - All License Types
+        - uuid: 964e7a47593642e79a8018c5bb22941d
+          name: 'Base firewall license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.1.1.0
+          key: sophos.license.base.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Base firewall protection license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: base
+
+        - uuid: f2e951c9abff494da02cc7dfc45199f4
+          name: 'Base firewall license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.1.2.0
+          key: sophos.license.base.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Base firewall protection license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: base
+
+        - uuid: d9f8f87a0ca442b9b91edb22f6a72d04
+          name: 'Network protection license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.2.1.0
+          key: sophos.license.network.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Network protection license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: network
+          triggers:
+            - uuid: 35f7ed2a16ce469f82a6f1f54b049ea0
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.license.network.status)=4'
+              name: 'Network protection license expired'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: license
+
+        - uuid: 9d52f77d138a44af9b8d7e777e9a7412
+          name: 'Network protection license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.2.2.0
+          key: sophos.license.network.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Network protection license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: network
+
+        - uuid: 22d997be9b9e449dbca9827a38932764
+          name: 'Web protection license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.3.1.0
+          key: sophos.license.web.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Web protection license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: web
+          triggers:
+            - uuid: 6f4b9e4be0974c668c537bc282edce9f
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.license.web.status)=4'
+              name: 'Web protection license expired'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: license
+
+        - uuid: 1732538861834ece934c86db4c93b066
+          name: 'Web protection license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.3.2.0
+          key: sophos.license.web.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Web protection license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: web
+
+        - uuid: 6c9b185ddd354e7a8c32a5a19bc7fa6e
+          name: 'Email Protection license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.4.1.0
+          key: sophos.license.email.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Email Protection license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: email
+          triggers:
+            - uuid: bb93e795f1d04a7eaf07e622422f4756
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.license.email.status)=4'
+              name: 'Email Protection license expired'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: license
+
+        - uuid: 02ca41eefdff4b85a8b8745ec2397b01
+          name: 'Email Protection license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.4.2.0
+          key: sophos.license.email.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Email Protection license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: email
+
+        - uuid: 1425f7eecf7e4b26908e521ec44e3c1e
+          name: 'Web server protection license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.5.1.0
+          key: sophos.license.webserver.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Web server protection license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: webserver
+          triggers:
+            - uuid: ad6b740d68b2443abde144ff2e422475
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.license.webserver.status)=4'
+              name: 'Web server protection license expired'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: license
+
+        - uuid: e3a0e408f78c43cf97f11fe049cc6ab6
+          name: 'Web server protection license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.5.2.0
+          key: sophos.license.webserver.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Web server protection license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: webserver
+
+        - uuid: 27c4cf512a424ad2bb693f6e95da8b1c
+          name: 'Zero-Day Protection license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.6.1.0
+          key: sophos.license.zeroday.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Zero-Day Protection license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: zeroday
+          triggers:
+            - uuid: 58bbf558440d4980a41d775af046ac2d
+              expression: 'last(/Sophos XG Firewall SNMP/sophos.license.zeroday.status)=4'
+              name: 'Zero-Day Protection license expired'
+              priority: WARNING
+              tags:
+                - tag: scope
+                  value: license
+
+        - uuid: e7dc2db2e0284840978e16429d6bca39
+          name: 'Zero-Day Protection license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.6.2.0
+          key: sophos.license.zeroday.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Zero-Day Protection license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: zeroday
+
+        - uuid: 70351627863f435586db3bebdb26b240
+          name: 'Enhanced support license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.7.1.0
+          key: sophos.license.enhanced.support.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Enhanced support license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: support
+
+        - uuid: 8a41050669164035ac32ad25faa3bb48
+          name: 'Enhanced support license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.7.2.0
+          key: sophos.license.enhanced.support.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Enhanced support license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: support
+
+        - uuid: 23721f8efea14e41a878ade2f743cb89
+          name: 'Enhanced plus support license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.8.1.0
+          key: sophos.license.enhanced.plus.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Enhanced plus support license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: support
+
+        - uuid: 75a992380e8549fba7d205549030f74d
+          name: 'Enhanced plus support license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.8.2.0
+          key: sophos.license.enhanced.plus.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Enhanced plus support license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: support
+
+        - uuid: 4ec124e48b1146bf8a820eb17e630854
+          name: 'Central orchestration license status'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.9.1.0
+          key: sophos.license.central.orchestration.status
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          description: 'Central orchestration license status'
+          valuemap:
+            name: 'Sophos Subscription Status'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: central
+
+        - uuid: e08966153266482eb6047037d0a97a84
+          name: 'Central orchestration license expiry'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.5.9.2.0
+          key: sophos.license.central.orchestration.expiry
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Central orchestration license expiry date'
+          tags:
+            - tag: component
+              value: license
+            - tag: license
+              value: central
+
+        # Traffic Statistics
+        - uuid: fffdec835fbb48dba6aaf2de9eb018e0
+          name: 'HTTP hits'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.7.0
+          key: sophos.traffic.http.hits
+          delay: 5m
+          history: 7d
+          trends: 30d
+          value_type: UNSIGNED
+          description: 'Total HTTP hits'
+          preprocessing:
+            - type: SIMPLE_CHANGE
+          tags:
+            - tag: component
+              value: traffic
+            - tag: protocol
+              value: http
+
+        - uuid: 1cb091310f844ee097a3d2872cc213ae
+          name: 'FTP hits'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.8.0
+          key: sophos.traffic.ftp.hits
+          delay: 5m
+          history: 7d
+          trends: 30d
+          value_type: UNSIGNED
+          description: 'Total FTP hits'
+          preprocessing:
+            - type: SIMPLE_CHANGE
+          tags:
+            - tag: component
+              value: traffic
+            - tag: protocol
+              value: ftp
+
+        - uuid: e1c39d4d85464ebc80ac6f59954d790d
+          name: 'POP3 hits'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.9.1.0
+          key: sophos.traffic.pop3.hits
+          delay: 5m
+          history: 7d
+          trends: 30d
+          value_type: UNSIGNED
+          description: 'Total POP3 hits'
+          preprocessing:
+            - type: SIMPLE_CHANGE
+          tags:
+            - tag: component
+              value: traffic
+            - tag: protocol
+              value: pop3
+
+        - uuid: 5179892116ff482fb8ef0597c5b7db2f
+          name: 'IMAP hits'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.9.2.0
+          key: sophos.traffic.imap.hits
+          delay: 5m
+          history: 7d
+          trends: 30d
+          value_type: UNSIGNED
+          description: 'Total IMAP hits'
+          preprocessing:
+            - type: SIMPLE_CHANGE
+          tags:
+            - tag: component
+              value: traffic
+            - tag: protocol
+              value: imap
+
+        - uuid: 21c935edaae94ffe90a167c1d3b75f18
+          name: 'SMTP hits'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2604.5.1.2.9.3.0
+          key: sophos.traffic.smtp.hits
+          delay: 5m
+          history: 7d
+          trends: 30d
+          value_type: UNSIGNED
+          description: 'Total SMTP hits'
+          preprocessing:
+            - type: SIMPLE_CHANGE
+          tags:
+            - tag: component
+              value: traffic
+            - tag: protocol
+              value: smtp
+
+        # SNMP Trap Support
+        - uuid: fcec93b7c03943b8b9e9b455e9b103cc
+          name: 'SNMP traps (fallback)'
+          type: SNMP_TRAP
+          key: snmptrap.fallback
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: LOG
+          description: 'Collects all SNMP traps from Sophos XG Firewall that do not match any configured trap items'
+          logtimefmt: 'hh:mm:sszyyyy/MM/dd'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: snmp
+
+        - uuid: 2c3cc9e243f541c68d03d43efc336672
+          name: 'SNMP trap: Device type'
+          type: SNMP_TRAP
+          key: snmptrap[1.3.6.1.4.1.2604.5.1.1.2]
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Device type from SNMP trap notification'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: device
+
+        - uuid: 0c5d809a5bf9468296096668311c92e2
+          name: 'SNMP trap: Firmware version'
+          type: SNMP_TRAP
+          key: snmptrap[1.3.6.1.4.1.2604.5.1.1.3]
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Firmware version from SNMP trap notification'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: firmware
+
+        - uuid: 381915e6a110426391e1ffdc6912576c
+          name: 'SNMP trap: Device key'
+          type: SNMP_TRAP
+          key: snmptrap[1.3.6.1.4.1.2604.5.1.1.4]
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Device appliance key from SNMP trap notification'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: device
+
+        - uuid: c5ea297c56e04ba09028020e5c701c12
+          name: 'SNMP trap: Device name'
+          type: SNMP_TRAP
+          key: snmptrap[1.3.6.1.4.1.2604.5.1.1.1]
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Device name from SNMP trap notification'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: device
+
+        - uuid: 9d54ae9c3ce74d888e4ae16d4d0618b7
+          name: 'SNMP trap: Current date'
+          type: SNMP_TRAP
+          key: snmptrap[1.3.6.1.4.1.2604.5.1.2.1]
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Current system date from SNMP trap notification'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: system
+
+        - uuid: f76b8428e3a14d03b4aef0e547f068f1
+          name: 'SNMP trap: Message'
+          type: SNMP_TRAP
+          key: snmptrap[1.3.6.1.4.1.2604.5.1.8.1.2]
+          delay: '0'
+          history: 30d
+          trends: '0'
+          value_type: TEXT
+          description: 'Trap message content - raw log line from Sophos XG events'
+          tags:
+            - tag: component
+              value: trap
+            - tag: resource
+              value: message
+          triggers:
+            - uuid: eb68ad6f0a0a45809721a1097d6a657f
+              expression: 'find(/Sophos XG Firewall SNMP/snmptrap[1.3.6.1.4.1.2604.5.1.8.1.2],,"regexp","CRITICAL|EMERGENCY")=1'
+              name: 'Critical event received via SNMP trap'
+              priority: HIGH
+              description: 'A critical or emergency event was received via SNMP trap'
+              tags:
+                - tag: scope
+                  value: event
+            - uuid: ef9bec64ed254787ab17fcbdb10c479c
+              expression: 'find(/Sophos XG Firewall SNMP/snmptrap[1.3.6.1.4.1.2604.5.1.8.1.2],,"regexp","ERROR")=1'
+              name: 'Error event received via SNMP trap'
+              priority: AVERAGE
+              description: 'An error event was received via SNMP trap'
+              tags:
+                - tag: scope
+                  value: event
+
+      discovery_rules:
+        # Network Interface Discovery
+        - uuid: 9bcb2a7ad6254d4aa8899087b75f21e5
+          name: 'Network interfaces discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},1.3.6.1.2.1.31.1.1.1.1,{#IFDESCR},1.3.6.1.2.1.2.2.1.2,{#IFTYPE},1.3.6.1.2.1.2.2.1.3,{#IFADMINSTATUS},1.3.6.1.2.1.2.2.1.7,{#IFOPERSTATUS},1.3.6.1.2.1.2.2.1.8,{#IFALIAS},1.3.6.1.2.1.31.1.1.1.18]'
+          key: net.if.discovery
+          delay: 1h
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#IFADMINSTATUS}'
+                value: '1'
+                formulaid: A
+              - macro: '{#IFNAME}'
+                value: '.*'
+                formulaid: B
+          description: 'Discovers network interfaces'
+          item_prototypes:
+            - uuid: 36b6b77c9d82475cbce8491af35b0206
+              name: 'Interface {#IFNAME}: Operational status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}'
+              key: 'net.if.status[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: UNSIGNED
+              valuemap:
+                name: 'Interface Operational Status'
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: d5c0067b330a408b81d7942f64a14c7d
+                  expression: 'last(/Sophos XG Firewall SNMP/net.if.status[{#IFNAME}])=2 and last(/Sophos XG Firewall SNMP/net.if.status[{#IFNAME}],#1)<>last(/Sophos XG Firewall SNMP/net.if.status[{#IFNAME}],#2)'
+                  name: 'Interface {#IFNAME}: Link down'
+                  priority: AVERAGE
+                  description: 'Interface {#IFNAME} link is down'
+                  tags:
+                    - tag: scope
+                      value: availability
+
+            - uuid: 0cb2475255c1489484ffff927172dbc4
+              name: 'Interface {#IFNAME}: Bits received'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}'
+              key: 'net.if.in[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: 14717a863f3a4533b34d44ff93653d40
+              name: 'Interface {#IFNAME}: Bits sent'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}'
+              key: 'net.if.out[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: 5fd47ac2e17245a4b6c0e162fcf3fd00
+              name: 'Interface {#IFNAME}: Inbound errors'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}'
+              key: 'net.if.in.errors[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: b88b957f861545bf90fb13b6490de2c6
+              name: 'Interface {#IFNAME}: Outbound errors'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}'
+              key: 'net.if.out.errors[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: 5c703abfd2e7451397c575b304021d64
+              name: 'Interface {#IFNAME}: Speed'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}'
+              key: 'net.if.speed[{#IFNAME}]'
+              delay: 1h
+              history: 7d
+              trends: 30d
+              units: bps
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000000'
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: a7e8c91f2b8649f8a3c7d5f2e1b4c6d8
+              name: 'Interface {#IFNAME}: Inbound errors'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}'
+              key: 'net.if.in.errors[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              preprocessing:
+                - type: SIMPLE_CHANGE
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: b3f4a82d7c5142e9b8e6a3f5d9c2e7f1
+              name: 'Interface {#IFNAME}: Outbound errors'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}'
+              key: 'net.if.out.errors[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              preprocessing:
+                - type: SIMPLE_CHANGE
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: c5e7b94a8d6f43c2a9b1f8e3c7d5a2b6
+              name: 'Interface {#IFNAME}: Inbound discards'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}'
+              key: 'net.if.in.discards[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              preprocessing:
+                - type: SIMPLE_CHANGE
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+            - uuid: d8a9c7e2f5b14a8cb9d6e4f1b3c8a7e9
+              name: 'Interface {#IFNAME}: Outbound discards'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.2.1.2.2.1.19.{#SNMPINDEX}'
+              key: 'net.if.out.discards[{#IFNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              preprocessing:
+                - type: SIMPLE_CHANGE
+              tags:
+                - tag: component
+                  value: interface
+                - tag: interface
+                  value: '{#IFNAME}'
+
+          trigger_prototypes:
+            - uuid: 42e3b836af224179aa9f4fe2b562f5af
+              expression: |
+                (avg(/Sophos XG Firewall SNMP/net.if.in[{#IFNAME}],15m)>({$BANDWIDTH_UTIL_WARN}/100*last(/Sophos XG Firewall SNMP/net.if.speed[{#IFNAME}])) or
+                avg(/Sophos XG Firewall SNMP/net.if.out[{#IFNAME}],15m)>({$BANDWIDTH_UTIL_WARN}/100*last(/Sophos XG Firewall SNMP/net.if.speed[{#IFNAME}]))) and
+                last(/Sophos XG Firewall SNMP/net.if.speed[{#IFNAME}])>0
+              name: 'Interface {#IFNAME}: High bandwidth usage'
+              priority: WARNING
+              description: 'Interface {#IFNAME} bandwidth usage is over {$BANDWIDTH_UTIL_WARN}%'
+              tags:
+                - tag: scope
+                  value: performance
+
+            - uuid: e9a7c2f4d8b5460398c1a6f7e3d2b8c9
+              expression: |
+                (last(/Sophos XG Firewall SNMP/net.if.in.errors[{#IFNAME}])>{$NET_IF_ERRORS_WARN} or
+                last(/Sophos XG Firewall SNMP/net.if.out.errors[{#IFNAME}])>{$NET_IF_ERRORS_WARN})
+              name: 'Interface {#IFNAME}: High error rate'
+              priority: WARNING
+              description: 'Interface {#IFNAME} has more than {$NET_IF_ERRORS_WARN} errors in the last 5 minutes'
+              tags:
+                - tag: scope
+                  value: performance
+
+            - uuid: f5b8d3a7e9c2471ab8d4f6e2c1a9b7d8
+              expression: |
+                (last(/Sophos XG Firewall SNMP/net.if.in.discards[{#IFNAME}])>{$NET_IF_DISCARDS_WARN} or
+                last(/Sophos XG Firewall SNMP/net.if.out.discards[{#IFNAME}])>{$NET_IF_DISCARDS_WARN})
+              name: 'Interface {#IFNAME}: High discard rate'
+              priority: WARNING
+              description: 'Interface {#IFNAME} has more than {$NET_IF_DISCARDS_WARN} discards in the last 5 minutes'
+              tags:
+                - tag: scope
+                  value: performance
+
+          graph_prototypes:
+            - uuid: e8235888808a4f4687214aa98d3f9376
+              name: 'Interface {#IFNAME}: Network traffic'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 1A7C11
+                  calc_fnc: AVG
+                  item:
+                    host: 'Sophos XG Firewall SNMP'
+                    key: 'net.if.in[{#IFNAME}]'
+                - sortorder: '1'
+                  drawtype: BOLD_LINE
+                  color: 2774A4
+                  calc_fnc: AVG
+                  item:
+                    host: 'Sophos XG Firewall SNMP'
+                    key: 'net.if.out[{#IFNAME}]'
+
+        # IPSec VPN Tunnel Discovery
+        - uuid: 3f1db61cff324050ad8f9bc7d1a7db13
+          name: 'IPSec VPN tunnels discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#VPNNAME},1.3.6.1.4.1.2604.5.1.6.1.1.1.1.2,{#VPNDESC},1.3.6.1.4.1.2604.5.1.6.1.1.1.1.3,{#VPNPOLICY},1.3.6.1.4.1.2604.5.1.6.1.1.1.1.4,{#VPNTYPE},1.3.6.1.4.1.2604.5.1.6.1.1.1.1.6]'
+          key: ipsec.vpn.discovery
+          delay: 30m
+          description: 'Discovers IPSec VPN tunnels'
+          item_prototypes:
+            - uuid: aef93d13d7644dcab0a3ba2558cea176
+              name: 'VPN {#VPNNAME}: Connection status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.1.1.1.9.{#SNMPINDEX}'
+              key: 'vpn.ipsec.status[{#VPNNAME}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: UNSIGNED
+              valuemap:
+                name: 'IPSec VPN Connection Status'
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: vpn
+                  value: '{#VPNNAME}'
+              trigger_prototypes:
+                - uuid: 5c8d51200c654516a7426bf5b3c05a62
+                  expression: 'last(/Sophos XG Firewall SNMP/vpn.ipsec.status[{#VPNNAME}])=0'
+                  name: 'VPN {#VPNNAME}: Connection is down'
+                  priority: WARNING
+                  description: 'IPSec VPN tunnel {#VPNNAME} is down'
+                  tags:
+                    - tag: scope
+                      value: availability
+
+            - uuid: 8bb127ba39714c3eab1f787a1468182a
+              name: 'VPN {#VPNNAME}: Active tunnels'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.1.1.1.8.{#SNMPINDEX}'
+              key: 'vpn.ipsec.active.tunnels[{#VPNNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: vpn
+                  value: '{#VPNNAME}'
+
+            - uuid: aae1c2be480d41b0b6731989ae53692f
+              name: 'VPN {#VPNNAME}: Activation status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.1.1.1.10.{#SNMPINDEX}'
+              key: 'vpn.ipsec.activation[{#VPNNAME}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: UNSIGNED
+              valuemap:
+                name: 'IPSec VPN Activation Status'
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: vpn
+                  value: '{#VPNNAME}'
+
+        # WiFi Access Point Discovery
+        - uuid: f907fa270cb94a42a4d79eaa796d1023
+          name: 'WiFi access points discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#APNAME},1.3.6.1.4.1.2604.5.1.7.1.1.1,{#APMODEL},1.3.6.1.4.1.2604.5.1.7.1.1.2,{#APIP},1.3.6.1.4.1.2604.5.1.7.1.1.3,{#APMAC},1.3.6.1.4.1.2604.5.1.7.1.1.4]'
+          key: wifi.ap.discovery
+          delay: 30m
+          description: 'Discovers WiFi access points'
+          item_prototypes:
+            - uuid: 09f9c2b6536e4b8f8092a521ab171d57
+              name: 'AP {#APNAME}: Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.7.1.1.5.{#SNMPINDEX}'
+              key: 'wifi.ap.status[{#APNAME}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: UNSIGNED
+              valuemap:
+                name: 'AP Status Type'
+              tags:
+                - tag: component
+                  value: wifi
+                - tag: ap
+                  value: '{#APNAME}'
+              trigger_prototypes:
+                - uuid: f3cd8ed3f0f54fa0b06007eb1cabe8fa
+                  expression: 'last(/Sophos XG Firewall SNMP/wifi.ap.status[{#APNAME}])=1'
+                  name: 'AP {#APNAME}: Disconnected'
+                  priority: WARNING
+                  description: 'Access point {#APNAME} is disconnected'
+                  tags:
+                    - tag: scope
+                      value: availability
+
+            - uuid: c50300f99ae249ec80bd529dc84a3ff6
+              name: 'AP {#APNAME}: Client count'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.7.1.1.6.{#SNMPINDEX}'
+              key: 'wifi.ap.clients[{#APNAME}]'
+              delay: 5m
+              history: 7d
+              trends: 30d
+              tags:
+                - tag: component
+                  value: wifi
+                - tag: ap
+                  value: '{#APNAME}'
+              trigger_prototypes:
+                - uuid: bae5812fdff14e19a9a075a75e288fb9
+                  expression: 'last(/Sophos XG Firewall SNMP/wifi.ap.clients[{#APNAME}])>{$AP_CLIENT_WARN}'
+                  name: 'AP {#APNAME}: High client count'
+                  priority: WARNING
+                  description: 'Access point {#APNAME} has more than {$AP_CLIENT_WARN} clients connected'
+                  tags:
+                    - tag: scope
+                      value: capacity
+
+        # IPSec VPN Policy Discovery
+        - uuid: a2bdb0f320304ebe9aaa648738a65195
+          name: 'IPSec VPN policies discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#POLICYNAME},1.3.6.1.4.1.2604.5.1.6.1.2.1.1.2,{#POLICYID},1.3.6.1.4.1.2604.5.1.6.1.2.1.1.1]'
+          key: ipsec.vpn.policy.discovery
+          delay: 1h
+          description: 'Discovers IPSec VPN policies'
+          item_prototypes:
+            - uuid: df74dfc03f114dbeaba0ef37c56192ab
+              name: 'VPN Policy {#POLICYNAME}: Key lifetime'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.3.{#SNMPINDEX}'
+              key: 'vpn.policy.keylife[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: 30d
+              units: s
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: e6241e1a063d43068441d0aefcd94661
+              name: 'VPN Policy {#POLICYNAME}: Key margin'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.4.{#SNMPINDEX}'
+              key: 'vpn.policy.keymargin[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: 30d
+              units: s
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: b11a90879a8a444f8bea34da04ea4680
+              name: 'VPN Policy {#POLICYNAME}: Encryption Algorithm 1'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.5.{#SNMPINDEX}'
+              key: 'vpn.policy.encalgo1[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: 65ba0c4bada040568fcbb5d4c468d180
+              name: 'VPN Policy {#POLICYNAME}: Authentication Algorithm 1'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.6.{#SNMPINDEX}'
+              key: 'vpn.policy.authalgo1[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: e53cee3e83bc4391988f9e81db6674ec
+              name: 'VPN Policy {#POLICYNAME}: Encryption Algorithm 2'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.7.{#SNMPINDEX}'
+              key: 'vpn.policy.encalgo2[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: 3f99c009868945bfb66b26dcf36183fc
+              name: 'VPN Policy {#POLICYNAME}: Authentication Algorithm 2'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.8.{#SNMPINDEX}'
+              key: 'vpn.policy.authalgo2[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: ddbdfc36a0684c2bac05a181af27f9b9
+              name: 'VPN Policy {#POLICYNAME}: Encryption Algorithm 3'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.9.{#SNMPINDEX}'
+              key: 'vpn.policy.encalgo3[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: faa755c33c584530b9c216840939e6de
+              name: 'VPN Policy {#POLICYNAME}: Authentication Algorithm 3'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.10.{#SNMPINDEX}'
+              key: 'vpn.policy.authalgo3[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+            - uuid: 69ac8d73d22c49c1bca5b51a6554a866
+              name: 'VPN Policy {#POLICYNAME}: Key Exchange Type'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.6.1.2.1.1.11.{#SNMPINDEX}'
+              key: 'vpn.policy.keyexchange[{#POLICYNAME}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: vpn
+                - tag: policy
+                  value: '{#POLICYNAME}'
+
+        # WiFi Client Discovery
+        - uuid: 01e587c4e1d248d88695bcb0326d11c8
+          name: 'WiFi clients discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CLIENTNAME},1.3.6.1.4.1.2604.5.1.7.2.1.2,{#CLIENTMAC},1.3.6.1.4.1.2604.5.1.7.2.1.5,{#CLIENTSSID},1.3.6.1.4.1.2604.5.1.7.2.1.7]'
+          key: wifi.client.discovery
+          delay: 30m
+          description: 'Discovers WiFi clients connected to access points'
+          item_prototypes:
+            - uuid: daa8d7bc5fcf4aaa88cf57e6ef42ff7a
+              name: 'WiFi Client {#CLIENTNAME}: IP address'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.7.2.1.4.{#SNMPINDEX}'
+              key: 'wifi.client.ip[{#CLIENTMAC}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: wifi
+                - tag: client
+                  value: '{#CLIENTNAME}'
+                - tag: ssid
+                  value: '{#CLIENTSSID}'
+
+            - uuid: 2c300845652847598536eea3c64c9caf
+              name: 'WiFi Client {#CLIENTNAME}: Channel'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2604.5.1.7.2.1.6.{#SNMPINDEX}'
+              key: 'wifi.client.channel[{#CLIENTMAC}]'
+              delay: 30m
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              tags:
+                - tag: component
+                  value: wifi
+                - tag: client
+                  value: '{#CLIENTNAME}'
+
+      valuemaps:
+        - uuid: d3d8ec4caf7a407bbc582a6d933d4943
+          name: 'Sophos Service Status'
+          mappings:
+            - value: '0'
+              newvalue: untouched
+            - value: '1'
+              newvalue: stopped
+            - value: '2'
+              newvalue: initializing
+            - value: '3'
+              newvalue: running
+            - value: '4'
+              newvalue: exiting
+            - value: '5'
+              newvalue: dead
+            - value: '6'
+              newvalue: frozen
+            - value: '7'
+              newvalue: unregistered
+
+        - uuid: 5772f8d6caa44f40aef2f7f982c98340
+          name: 'Sophos HA Status Type'
+          mappings:
+            - value: '0'
+              newvalue: disabled
+            - value: '1'
+              newvalue: enabled
+
+        - uuid: 70f7143c77a74899a1fbf4d101ac91e0
+          name: 'Sophos HA State'
+          mappings:
+            - value: '0'
+              newvalue: 'not applicable'
+            - value: '1'
+              newvalue: auxiliary
+            - value: '2'
+              newvalue: standalone
+            - value: '3'
+              newvalue: primary
+            - value: '4'
+              newvalue: faulty
+            - value: '5'
+              newvalue: ready
+
+        - uuid: eeca6d83cb02429f8d77742b9951383c
+          name: 'Sophos Subscription Status'
+          mappings:
+            - value: '0'
+              newvalue: none
+            - value: '1'
+              newvalue: evaluating
+            - value: '2'
+              newvalue: 'not subscribed'
+            - value: '3'
+              newvalue: subscribed
+            - value: '4'
+              newvalue: expired
+            - value: '5'
+              newvalue: deactivated
+
+        - uuid: a410dd7fbca8415a8ab620bcbdf7badb
+          name: 'IPSec VPN Connection Status'
+          mappings:
+            - value: '0'
+              newvalue: inactive
+            - value: '1'
+              newvalue: active
+            - value: '2'
+              newvalue: 'partially active'
+
+        - uuid: 9fad1aff100944d09c6f125e1a4a189b
+          name: 'AP Status Type'
+          mappings:
+            - value: '0'
+              newvalue: connected
+            - value: '1'
+              newvalue: disconnected
+
+        - uuid: 0aa91087f6164ae798e3da07e2d9a701
+          name: 'Interface Operational Status'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
+
+        - uuid: a0337e196a8a4a09bd18d145d1915a55
+          name: 'Sophos Load Balancing Type'
+          mappings:
+            - value: '0'
+              newvalue: 'not applicable'
+            - value: '1'
+              newvalue: 'load balance off'
+            - value: '2'
+              newvalue: 'load balance on'
+
+        - uuid: 0b1f229c730d4f9cb9e2d2aed359dafe
+          name: 'IPSec VPN Activation Status'
+          mappings:
+            - value: '0'
+              newvalue: inactive
+            - value: '1'
+              newvalue: active
+
+      macros:
+        - macro: '{$SNMP_COMMUNITY}'
+          value: public
+          description: 'SNMP community string'
+        - macro: '{$SNMP_PORT}'
+          value: '161'
+          description: 'SNMP port'
+        - macro: '{$DISK_UTIL_WARN}'
+          value: '85'
+          description: 'Disk utilization warning threshold'
+        - macro: '{$DISK_UTIL_CRIT}'
+          value: '95'
+          description: 'Disk utilization critical threshold'
+        - macro: '{$MEMORY_UTIL_WARN}'
+          value: '85'
+          description: 'Memory utilization warning threshold'
+        - macro: '{$MEMORY_UTIL_CRIT}'
+          value: '95'
+          description: 'Memory utilization critical threshold'
+        - macro: '{$SWAP_UTIL_WARN}'
+          value: '50'
+          description: 'Swap utilization warning threshold'
+        - macro: '{$SWAP_UTIL_CRIT}'
+          value: '80'
+          description: 'Swap utilization critical threshold'
+        - macro: '{$AP_CLIENT_WARN}'
+          value: '50'
+          description: 'WiFi AP client count warning threshold'
+        - macro: '{$SNMP_TRAP_PORT}'
+          value: '162'
+          description: 'SNMP trap port'
+        - macro: '{$BANDWIDTH_UTIL_WARN}'
+          value: '90'
+          description: 'Network interface bandwidth utilization warning threshold (percentage)'
+        - macro: '{$LICENSE_EXPIRY_WARN_DAYS}'
+          value: '30'
+          description: 'Days before license expiry to trigger warning'
+        - macro: '{$LICENSE_EXPIRY_CRIT_DAYS}'
+          value: '7'
+          description: 'Days before license expiry to trigger critical alert'
+        - macro: '{$NET_IF_ERRORS_WARN}'
+          value: '1000'
+          description: 'Network interface error count warning threshold per 5 minutes'
+        - macro: '{$NET_IF_DISCARDS_WARN}'
+          value: '1000'
+          description: 'Network interface discard count warning threshold per 5 minutes'
+        - macro: '{$VPN_TUNNEL_INACTIVE_TIME}'
+          value: '300'
+          description: 'VPN tunnel inactive time threshold in seconds'
+        - macro: '{$SERVICE_RESTART_WARN_COUNT}'
+          value: '3'
+          description: 'Service restart count threshold within an hour'
+        - macro: '{$HA_STATE_CHANGE_WARN}'
+          value: '2'
+          description: 'HA state change count threshold within 10 minutes'
+
+      dashboards:
+        - uuid: 5767ded836674727a23c5efe9a4ac91c
+          name: 'Sophos XG Firewall Overview'
+          display_period: '30'
+          auto_start: 'YES'
+          pages:
+            - name: 'Main'
+              display_period: '0'
+              widgets:
+                - type: item
+                  name: 'Device Information'
+                  width: '12'
+                  height: '6'
+                  fields:
+                    - type: INTEGER
+                      name: show
+                      value: '1'
+                    - type: INTEGER
+                      name: show_header
+                      value: '1'
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        key: sophos.device.name
+                        host: 'Sophos XG Firewall SNMP'
+                - type: svggraph
+                  name: 'Memory and Swap Usage'
+                  x: '12'
+                  width: '12'
+                  height: '6'
+                  fields:
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: ITEM
+                      name: itemids.0
+                      value:
+                        key: sophos.memory.usage.percentage
+                        host: 'Sophos XG Firewall SNMP'
+                    - type: ITEM
+                      name: itemids.1
+                      value:
+                        key: sophos.swap.usage.percentage
+                        host: 'Sophos XG Firewall SNMP'
+                - type: svggraph
+                  name: 'Disk Usage'
+                  'y': '6'
+                  width: '12'
+                  height: '6'
+                  fields:
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: ITEM
+                      name: itemids.0
+                      value:
+                        key: sophos.disk.usage.percentage
+                        host: 'Sophos XG Firewall SNMP'
+                - type: svggraph
+                  name: 'Traffic Statistics'
+                  x: '12'
+                  'y': '6'
+                  width: '12'
+                  height: '6'
+                  fields:
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: ITEM
+                      name: itemids.0
+                      value:
+                        key: sophos.traffic.http.hits
+                        host: 'Sophos XG Firewall SNMP'
+                    - type: ITEM
+                      name: itemids.1
+                      value:
+                        key: sophos.traffic.ftp.hits
+                        host: 'Sophos XG Firewall SNMP'
+                    - type: ITEM
+                      name: itemids.2
+                      value:
+                        key: sophos.traffic.smtp.hits
+                        host: 'Sophos XG Firewall SNMP' 
